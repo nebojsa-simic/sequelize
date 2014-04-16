@@ -15,6 +15,21 @@ describe("DAO translatable", function () {
   var Page = null;
 
   beforeEach(function(done) {
+    User = this.sequelize.define(
+      'UserCol', 
+      {
+        id: { 
+          type: Sequelize.INTEGER, 
+          primaryKey: true, 
+          autoIncrement: true 
+        },
+        username: { 
+          type: Sequelize.STRING, 
+          defaultValue: 'Username' 
+        },
+      }
+    );
+
     Page = this.sequelize.define(
       'PageCol', 
       {
@@ -46,6 +61,13 @@ describe("DAO translatable", function () {
   it('adds the setDefaultLocale and getDefaultLocale methods to the model if the translatable option is used', function (done) {
     expect(Page.setDefaultLocale).to.exist;
     expect(Page.getDefaultLocale()).to.equal("en_US");
+    done();
+  });
+
+  it('does not add the setDefaultLocale and getDefaultLocale methods to the model if the translatable option is not used', function (done) {
+    expect(User.setDefaultLocale).to.not.exist;
+    expect(User.getDefaultLocale).to.not.exist;
+    done();
   });
 
   it('creates the second translation table if the translatable option is used', function (done) {
@@ -53,10 +75,21 @@ describe("DAO translatable", function () {
     Page.sync({force: true}).success(function () {
       self.sequelize.getQueryInterface().showAllTables().success(function(tables) {
         expect(tables).to.have.length(2);
+        done();
       });
     });
   });
 
+  it('does not create the second translation table if the translatable option is not used', function (done) {
+    var self = this;
+    User.sync({force: true}).success(function () {
+      self.sequelize.getQueryInterface().showAllTables().success(function(tables) {
+        expect(tables).to.have.length(1);
+        done();
+      });
+    });
+  });
+ 
   it('creates and loads the data with the default locale', function(done) {
     Page.sync({force: true}).success(function () {
       Page.setDefaultLocale("en_US");
@@ -70,6 +103,8 @@ describe("DAO translatable", function () {
           expect(loadedpage.locale).to.equal("en_US");
           expect(loadedpage.title).to.equal("title en");
           expect(loadedpage.visibility).to.equal(true);
+
+          done();
         });
       });
     });
@@ -84,10 +119,12 @@ describe("DAO translatable", function () {
         expect(createdpage.title).to.equal("title de");
         expect(createdpage.visibility).to.equal(true);
 
-        Page.find({ where: { id: createdpage.id, locale: "de_AT" }).success(function(loadedpage) {
+        Page.find({ where: { id: createdpage.id, locale: "de_AT" }}).success(function(loadedpage) {
           expect(loadedpage.locale).to.equal("de_AT");
           expect(loadedpage.title).to.equal("title de");
           expect(loadedpage.visibility).to.equal(true);
+
+          done();
         });
       });
     });
@@ -102,10 +139,12 @@ describe("DAO translatable", function () {
         expect(createdpage.title).to.equal("title de");
         expect(createdpage.visibility).to.equal(true);
 
-        Page.find({ where: { id: createdpage.id, locale: "de_AT" }).success(function(loadedpage) {
+        Page.find({ where: { id: createdpage.id, locale: "de_AT" }}).success(function(loadedpage) {
           expect(loadedpage.locale).to.equal("de");
           expect(loadedpage.title).to.equal("title de");
           expect(loadedpage.visibility).to.equal(true);
+
+          done();
         });
       });
     });
@@ -130,10 +169,12 @@ describe("DAO translatable", function () {
             expect(loadedpage.title).to.equal("title en");
             expect(loadedpage.visibility).to.equal(true);
 
-            Page.find({ where: { id: createdpage.id }, locale: "de_AT" }).success(function(loadedpage) {
+            Page.find({ where: { id: createdpage.id, locale: "de_AT" } }).success(function(loadedpage) {
               expect(loadedpage.locale).to.equal("de_AT");
               expect(loadedpage.title).to.equal("title de");
               expect(loadedpage.visibility).to.equal(true);
+
+              done();
             });
 
           });
