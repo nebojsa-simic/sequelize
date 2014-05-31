@@ -70,6 +70,18 @@ describe("DAO translatable", function () {
     done();
   });
 
+  it('adds the locale attribute to the model if the translatable option is used', function (done) {
+    var self = this;
+    Page.sync({force: true}).success(function () {
+      Page
+        .create({ title: "title en", visibility: true })
+        .success(function (createdpage) {
+          expect(createdpage.locale).to.exist;
+          done();
+        });
+    });
+  });
+
   it('creates the second translation table if the translatable option is used', function (done) {
     var self = this;
     Page.sync({force: true}).success(function () {
@@ -94,18 +106,20 @@ describe("DAO translatable", function () {
     Page.sync({force: true}).success(function () {
       Page.setDefaultLocale("en_US");
 
-      Page.create({ title: "title en", visibility: true }).success(function (createdpage) {
-        expect(createdpage.locale).to.equal("en_US");
-        expect(createdpage.title).to.equal("title en");
-        expect(createdpage.visibility).to.equal(true);
+      Page
+        .create({ title: "title en", visibility: true })
+        .success(function (createdpage) {
+          expect(createdpage.locale).to.equal("en_US");
+          expect(createdpage.title).to.equal("title en");
+          expect(createdpage.visibility).to.equal(true);
 
-        Page.find({ where: { id: createdpage.id } }).success(function(loadedpage) {
-          expect(loadedpage.locale).to.equal("en_US");
-          expect(loadedpage.title).to.equal("title en");
-          expect(loadedpage.visibility).to.equal(true);
+          Page.find({ where: { id: createdpage.id } }).success(function(loadedpage) {
+            expect(loadedpage.locale).to.equal("en_US");
+            expect(loadedpage.title).to.equal("title en");
+            expect(loadedpage.visibility).to.equal(true);
 
-          done();
-        });
+            done();
+          });
       });
     });
   });
@@ -130,12 +144,29 @@ describe("DAO translatable", function () {
     });
   });
 
+  it('does not load the data if the locale does not match', function(done) {
+    Page.sync({force: true}).success(function () {
+      Page.setDefaultLocale("en_US");
+
+      Page.create({ title: "title de", visibility: true, locale: "de_AT" }).success(function (createdpage) {
+        expect(createdpage.locale).to.equal("de_AT");
+        expect(createdpage.title).to.equal("title de");
+        expect(createdpage.visibility).to.equal(true);
+
+        Page.find({ where: { id: createdpage.id, locale: "en_US" }}).success(function(loadedpage) {
+          expect(loadedpage).to.be.null;
+          done();
+        });
+      });
+    });
+  });
+
   it('creates and loads the data with the fuzzy matching of locales', function(done) {
     Page.sync({force: true}).success(function () {
       Page.setDefaultLocale("en_US");
 
-      Page.create({ title: "title de", visibility: true, locale: "de" }).success(function (createdpage) {
-        expect(createdpage.locale).to.equal("de");
+      Page.create({ title: "title de", visibility: true, locale: "de_DE" }).success(function (createdpage) {
+        expect(createdpage.locale).to.equal("de_DE");
         expect(createdpage.title).to.equal("title de");
         expect(createdpage.visibility).to.equal(true);
 
